@@ -10,7 +10,8 @@ import (
 
 // DecodeJSONRequest decodes the JSON request into the given proto message reference.
 // The HTTP error status code will be respond if decoding failed.
-func DecodeJSONRequest(w http.ResponseWriter, r *http.Request, m proto.Message) error {
+// UnmarshalOptions opts cannot be nil.
+func DecodeJSONRequest(w http.ResponseWriter, r *http.Request, m proto.Message, opts *protojson.UnmarshalOptions) error {
 	if nil == r.Body {
 		http.Error(w, "empty request", http.StatusBadRequest)
 		return ErrEmptyRequestBody
@@ -22,7 +23,7 @@ func DecodeJSONRequest(w http.ResponseWriter, r *http.Request, m proto.Message) 
 			Err: err,
 		}
 	}
-	if err = protojson.Unmarshal(reqBody, m); nil != err {
+	if err = opts.Unmarshal(reqBody, m); nil != err {
 		http.Error(w, "malformed request", http.StatusBadRequest)
 		return &ErrMalformedRequest{
 			Err: err,

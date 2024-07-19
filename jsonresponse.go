@@ -15,8 +15,9 @@ func attachJSONContentHeader(w http.ResponseWriter, b []byte) {
 
 // JSONResponseWithStatusCode generate JSON response based on given protobuf
 // message m with given statusCode and private Cache-Control headers enabled.
-func JSONResponseWithStatusCode(w http.ResponseWriter, m proto.Message, statusCode int) (err error) {
-	b, err := protojson.Marshal(m)
+// MarshalOptions opts cannot be nil.
+func JSONResponseWithStatusCode(w http.ResponseWriter, m proto.Message, statusCode int, opts *protojson.MarshalOptions) (err error) {
+	b, err := opts.Marshal(m)
 	if err != nil {
 		http.Error(w, "500 JSONResponseWithStatusCode Failed:\n"+err.Error(), http.StatusInternalServerError)
 		return err
