@@ -7,44 +7,66 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// ErrorStatusResponse generate HTTP error response based on given error.
+// ErrorStatusResponse generate HTTP error response based on given gRPC error status.
 func ErrorStatusResponse(w http.ResponseWriter, err error) {
 	w.Header().Set("Cache-Control", "no-cache, private")
 	w.Header().Set("Pragma", "no-cache")
-	switch status.Code(err) {
+	st := status.Convert(err)
+	httpCode := http.StatusInternalServerError
+	httpMsg := "unknown error" // must not contain colon (":") character
+	statusMsg := st.Message()
+	switch st.Code() {
 	case codes.Canceled:
-		http.Error(w, "canceled", http.StatusServiceUnavailable)
+		httpMsg = "canceled"
+		httpCode = http.StatusServiceUnavailable
 	case codes.Unknown:
-		http.Error(w, "unknown error", http.StatusInternalServerError)
+		httpCode = http.StatusInternalServerError
+		httpMsg = "unknown error"
 	case codes.InvalidArgument:
-		http.Error(w, "invalid argument", http.StatusBadRequest)
+		httpCode = http.StatusBadRequest
+		httpMsg = "invalid argument"
 	case codes.DeadlineExceeded:
-		http.Error(w, "deadline exceeded", http.StatusInternalServerError)
+		httpCode = http.StatusInternalServerError
+		httpMsg = "deadline exceeded"
 	case codes.NotFound:
-		http.Error(w, "not found", http.StatusNotFound)
+		httpCode = http.StatusNotFound
+		httpMsg = "not found"
 	case codes.AlreadyExists:
-		http.Error(w, "already exists", http.StatusConflict)
+		httpCode = http.StatusConflict
+		httpMsg = "already exists"
 	case codes.PermissionDenied:
-		http.Error(w, "permission denied", http.StatusForbidden)
+		httpCode = http.StatusForbidden
+		httpMsg = "permission denied"
 	case codes.ResourceExhausted:
-		http.Error(w, "resource exhausted", http.StatusServiceUnavailable)
+		httpCode = http.StatusServiceUnavailable
+		httpMsg = "resource exhausted"
 	case codes.FailedPrecondition:
-		http.Error(w, "failed precondition", http.StatusInternalServerError)
+		httpCode = http.StatusInternalServerError
+		httpMsg = "failed precondition"
 	case codes.Aborted:
-		http.Error(w, "aborted", http.StatusInternalServerError)
+		httpCode = http.StatusInternalServerError
+		httpMsg = "aborted"
 	case codes.OutOfRange:
-		http.Error(w, "out of range", http.StatusBadRequest)
+		httpCode = http.StatusBadRequest
+		httpMsg = "out of range"
 	case codes.Unimplemented:
-		http.Error(w, "unimplemented", http.StatusNotImplemented)
+		httpCode = http.StatusNotImplemented
+		httpMsg = "unimplemented"
 	case codes.Internal:
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		httpCode = http.StatusInternalServerError
+		httpMsg = "internal error"
 	case codes.Unavailable:
-		http.Error(w, "unavailable", http.StatusServiceUnavailable)
+		httpCode = http.StatusServiceUnavailable
+		httpMsg = "unavailable"
 	case codes.DataLoss:
-		http.Error(w, "data loss", http.StatusInternalServerError)
+		httpCode = http.StatusInternalServerError
+		httpMsg = "data loss"
 	case codes.Unauthenticated:
-		http.Error(w, "unauthenticated", http.StatusUnauthorized)
-	default:
-		http.Error(w, "unknown error", http.StatusInternalServerError)
+		httpCode = http.StatusUnauthorized
+		httpMsg = "unauthenticated"
 	}
+	if statusMsg != "" {
+		httpMsg = httpMsg + ": " + statusMsg
+	}
+	http.Error(w, httpMsg, httpCode)
 }
